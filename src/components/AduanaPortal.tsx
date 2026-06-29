@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserCheck, Clock, FileText, CheckCircle2, XCircle, Landmark, ShieldCheck, HelpCircle, History, LandmarkIcon, PawPrint, AlertOctagon, HeartHandshake, Leaf } from 'lucide-react';
+import { UserCheck, Clock, FileText, CheckCircle2, XCircle, Landmark, ShieldCheck, HelpCircle, History, LandmarkIcon, PawPrint, AlertOctagon, HeartHandshake, Leaf, Key, AlertCircle, Info } from 'lucide-react';
 import { PasajeroAduana, Mascota, EquipajeSAG } from '../types';
 
 interface AduanaPortalProps {
@@ -15,6 +15,36 @@ export default function AduanaPortal({
   equipajesSAG,
   onDecision
 }: AduanaPortalProps) {
+  // Login simulation state
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [rut, setRut] = useState('');
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+
+  // Pre-seeded credentials for Aduana
+  const DEFAULT_RUT = "11.222.333-4";
+  const DEFAULT_PASS = "aduana1234";
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (
+      (rut.trim() === DEFAULT_RUT && password === DEFAULT_PASS) || 
+      (rut.trim().toLowerCase() === 'admin' || password === 'admin')
+    ) {
+      setIsLoggedIn(true);
+      setLoginError('');
+    } else {
+      setLoginError('Credenciales incorrectas. Pruebe con las indicadas en el cuadro informativo.');
+    }
+  };
+
+  const handleQuickLogin = () => {
+    setRut(DEFAULT_RUT);
+    setPassword(DEFAULT_PASS);
+    setIsLoggedIn(true);
+    setLoginError('');
+  };
+
   const [selectedPasajeroId, setSelectedPasajeroId] = useState<string>(pasajeros[0]?.id || '');
   
   // Interactive audit tabs for passenger data (HU-04 Esc 2)
@@ -52,7 +82,95 @@ export default function AduanaPortal({
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" id="aduana-portal-root">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left">
+      
+      {/* 1. NOT LOGGED IN STATE - SHOW FORM */}
+      {!isLoggedIn ? (
+        <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden" id="aduana-login-form">
+          <div className="bg-[#002f6c] text-white p-6 text-center border-b border-amber-500/30">
+            <div className="bg-amber-400 p-3 rounded-full w-14 h-14 mx-auto flex items-center justify-center text-blue-950 mb-3 shadow-md">
+              <Landmark className="h-8 w-8 text-[#002f6c]" />
+            </div>
+            <h3 className="font-extrabold text-lg uppercase tracking-wider">Aduanas de Chile</h3>
+            <p className="text-slate-300 text-xs mt-1">Servicio Nacional de Aduanas • Control de Divisas y Equipaje</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="p-6 space-y-4 text-left">
+            <p className="text-slate-500 text-xs text-center">
+              Ingrese sus credenciales de fiscalizador aduanero para procesar declaraciones juradas de equipaje, porte de divisas e historiales migratorios.
+            </p>
+
+            {loginError && (
+              <div className="bg-red-50 text-red-800 text-xs p-3 rounded-lg border border-red-200 flex gap-2" id="aduana-login-error-alert">
+                <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
+                <span>{loginError}</span>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase flex items-center gap-1">
+                <UserCheck className="h-3 w-3 text-[#002f6c]" />
+                RUT del Fiscalizador Aduana
+              </label>
+              <input
+                type="text"
+                required
+                placeholder="Ej: 11.222.333-4 o 'admin'"
+                value={rut}
+                onChange={(e) => setRut(e.target.value)}
+                className="mt-1 w-full border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#002f6c]"
+                id="aduana-input-rut"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase flex items-center gap-1">
+                <Key className="h-3 w-3 text-[#002f6c]" />
+                Clave de Acceso Única
+              </label>
+              <input
+                type="password"
+                required
+                placeholder="Ej: aduana1234 o 'admin'"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="mt-1 w-full border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#002f6c]"
+                id="aduana-input-pass"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-2.5 bg-[#002f6c] hover:bg-[#001f4d] text-white font-extrabold rounded-xl text-xs transition-colors cursor-pointer flex items-center justify-center gap-2"
+              id="aduana-btn-ingresar"
+            >
+              <ShieldCheck className="h-4 w-4 text-amber-400" />
+              Autenticar Fiscalizador Aduana
+            </button>
+
+            <div className="border-t border-slate-100 pt-4 mt-2">
+              <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/50 space-y-2">
+                <div className="flex items-center gap-1 text-[11px] font-bold text-slate-600">
+                  <Info className="h-3.5 w-3.5 text-amber-500" />
+                  <span>CREDENCIALES DE SIMULACIÓN</span>
+                </div>
+                <div className="text-[10px] text-slate-500 space-y-1 font-mono">
+                  <p><strong>RUT:</strong> {DEFAULT_RUT}</p>
+                  <p><strong>Clave:</strong> {DEFAULT_PASS}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleQuickLogin}
+                  className="w-full mt-1.5 py-1.5 bg-amber-400 hover:bg-amber-500 text-blue-950 font-black rounded-lg text-[10px] transition-colors cursor-pointer"
+                  id="aduana-btn-quick-login"
+                >
+                  ⚡ Ingreso Rápido con 1 Clic
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left">
         
         {/* LEFT COLUMN: Queue of Passengers (HU-04 Escenario 1: Control y Verificación de datos) */}
         <div className="lg:col-span-4 space-y-4">
@@ -559,6 +677,7 @@ export default function AduanaPortal({
         </div>
 
       </div>
+      )}
     </div>
   );
 }

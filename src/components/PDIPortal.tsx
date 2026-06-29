@@ -5,9 +5,10 @@ import { CasoPDI } from '../types';
 interface PDIPortalProps {
   casos: CasoPDI[];
   onAddCaso?: (nuevoCaso: CasoPDI) => void;
+  onUpdateCaso?: (casoId: string, resolucion: 'Aceptado' | 'Denegado' | 'Pendiente', motivo: string) => void;
 }
 
-export default function PDIPortal({ casos }: PDIPortalProps) {
+export default function PDIPortal({ casos, onUpdateCaso }: PDIPortalProps) {
   // HU-02 Esc 1: Login simulation state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [rut, setRut] = useState('');
@@ -17,6 +18,9 @@ export default function PDIPortal({ casos }: PDIPortalProps) {
   // HU-02 Esc 2 & 3: Cases Dashboard state
   const [searchId, setSearchId] = useState('');
   const [selectedCaso, setSelectedCaso] = useState<CasoPDI | null>(null);
+  
+  // Local state for resolution justification
+  const [resolutionMotive, setResolutionMotive] = useState('');
 
   // Pre-seeded credentials for PDI
   const DEFAULT_RUT = "12.345.678-9";
@@ -251,7 +255,10 @@ export default function PDIPortal({ casos }: PDIPortalProps) {
                       
                       <button
                         id={`btn-ver-caso-${caso.id}`}
-                        onClick={() => setSelectedCaso(caso)}
+                        onClick={() => {
+                          setSelectedCaso(caso);
+                          setResolutionMotive(caso.motivoResolucion || '');
+                        }}
                         className="bg-slate-100 hover:bg-[#002f6c] hover:text-white text-slate-700 py-1.5 px-3 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer"
                       >
                         <Eye className="h-3.5 w-3.5" />
@@ -333,6 +340,104 @@ export default function PDIPortal({ casos }: PDIPortalProps) {
                 </p>
               </div>
 
+              {/* RESOLUTION AND DECISION FORM */}
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/60 space-y-3">
+                <h5 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                  <UserCheck className="h-3.5 w-3.5 text-[#001f4d]" />
+                  Resolución del Fiscalizador PDI
+                </h5>
+
+                {selectedCaso.resolucionPDI && selectedCaso.resolucionPDI !== 'Pendiente' ? (
+                  <div className={`p-3 rounded-lg border text-xs ${
+                    selectedCaso.resolucionPDI === 'Aceptado'
+                      ? 'bg-emerald-50 text-emerald-900 border-emerald-200'
+                      : 'bg-red-50 text-red-900 border-red-200'
+                  }`}>
+                    <p className="font-bold uppercase flex items-center gap-1">
+                      {selectedCaso.resolucionPDI === 'Aceptado' ? (
+                        <CheckCircle className="h-4 w-4 text-emerald-700" />
+                      ) : (
+                        <X className="h-4 w-4 text-red-700 animate-pulse" />
+                      )}
+                      Caso Resoluto: {selectedCaso.resolucionPDI === 'Aceptado' ? 'Caso Aceptado (Ingreso Autorizado)' : 'Caso Denegado (Alerta Activa)'}
+                    </p>
+                    {selectedCaso.motivoResolucion && (
+                      <p className="mt-1.5 text-[11px] text-slate-700 bg-white p-2 rounded border border-slate-100 font-mono">
+                        <strong>Justificación:</strong> {selectedCaso.motivoResolucion}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="text-[11px] text-slate-500">
+                      Determine la admisibilidad del pasajero basándose en la investigación migratoria y antecedentes detallados arriba. Es obligatorio justificar la decisión.
+                    </p>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase">Justificación o Fundamento de Decisión *</label>
+                      <textarea
+                        rows={2}
+                        required
+                        placeholder="Ej: Se verifica que el pasajero aclaró la requisitoria judicial en tribunal de origen / Cuenta con orden activa de Interpol sin regularizar..."
+                        value={resolutionMotive}
+                        onChange={(e) => setResolutionMotive(e.target.value)}
+                        className="mt-1 w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#001f4d]"
+                        id="input-motive-resolucion-pdi"
+                      />
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!resolutionMotive.trim()) {
+                            alert("Por favor escriba una justificación o motivo para la resolución.");
+                            return;
+                          }
+                          if (onUpdateCaso) {
+                            onUpdateCaso(selectedCaso.id, 'Aceptado', resolutionMotive);
+                            setSelectedCaso({
+                              ...selectedCaso,
+                              resolucionPDI: 'Aceptado',
+                              motivoResolucion: resolutionMotive,
+                              estado: 'Despejado'
+                            });
+                          }
+                        }}
+                        className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-3 rounded-lg text-xs transition-colors cursor-pointer text-center flex items-center justify-center gap-1"
+                        id="btn-aceptar-caso-pdi"
+                      >
+                        <CheckCircle className="h-3.5 w-3.5" />
+                        Autorizar (Aceptar)
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!resolutionMotive.trim()) {
+                            alert("Por favor escriba una justificación o motivo para la resolución.");
+                            return;
+                          }
+                          if (onUpdateCaso) {
+                            onUpdateCaso(selectedCaso.id, 'Denegado', resolutionMotive);
+                            setSelectedCaso({
+                              ...selectedCaso,
+                              resolucionPDI: 'Denegado',
+                              motivoResolucion: resolutionMotive,
+                              estado: 'Alerta Activa'
+                            });
+                          }
+                        }}
+                        className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-lg text-xs transition-colors cursor-pointer text-center flex items-center justify-center gap-1"
+                        id="btn-denegar-caso-pdi"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                        Denegar Ingreso
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Creator details required in HU-02 Esc 3 */}
               <div className="grid grid-cols-2 gap-4 text-[11px] border-t border-slate-100 pt-3 text-slate-500">
                 <div>
@@ -347,17 +452,6 @@ export default function PDIPortal({ casos }: PDIPortalProps) {
             </div>
 
             <div className="bg-slate-100 px-6 py-3 flex justify-end gap-2">
-              {selectedCaso.estado !== 'Despejado' && (
-                <button
-                  onClick={() => {
-                    selectedCaso.estado = 'Despejado';
-                    setSelectedCaso(null);
-                  }}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg cursor-pointer"
-                >
-                  Marcar como Despejado
-                </button>
-              )}
               <button
                 onClick={() => setSelectedCaso(null)}
                 className="px-4 py-2 bg-slate-500 hover:bg-slate-600 text-white text-xs font-bold rounded-lg cursor-pointer"

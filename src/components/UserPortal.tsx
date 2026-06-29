@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Filter, PawPrint, FileText, Info, HelpCircle, CheckCircle, AlertTriangle, Trash2, PlusCircle, Check, X, ShieldAlert, Landmark } from 'lucide-react';
 import { Tramite, Mascota } from '../types';
 
@@ -7,9 +7,22 @@ interface UserPortalProps {
   mascotas: Mascota[];
   onAddPet: (pet: Mascota) => void;
   onDeletePet: (petId: string, rut: string) => boolean;
+  initialTab?: 'tramites' | 'mascotas';
+  onChangeTab?: (tab: 'tramites' | 'mascotas') => void;
+  initialModal?: 'register' | 'query' | 'delete' | null;
+  onChangeModal?: (modal: 'register' | 'query' | 'delete' | null) => void;
 }
 
-export default function UserPortal({ tramites, mascotas, onAddPet, onDeletePet }: UserPortalProps) {
+export default function UserPortal({ 
+  tramites, 
+  mascotas, 
+  onAddPet, 
+  onDeletePet,
+  initialTab,
+  onChangeTab,
+  initialModal,
+  onChangeModal
+}: UserPortalProps) {
   // HU-03 State
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
@@ -22,10 +35,38 @@ export default function UserPortal({ tramites, mascotas, onAddPet, onDeletePet }
   const [isQueryModalOpen, setIsQueryModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
+
+  useEffect(() => {
+    if (initialModal) {
+      if (initialModal === 'register') {
+        setIsRegisterModalOpen(true);
+        setIsQueryModalOpen(false);
+        setIsDeleteModalOpen(false);
+      } else if (initialModal === 'query') {
+        setIsQueryModalOpen(true);
+        setIsRegisterModalOpen(false);
+        setIsDeleteModalOpen(false);
+      } else if (initialModal === 'delete') {
+        setIsDeleteModalOpen(true);
+        setIsRegisterModalOpen(false);
+        setIsQueryModalOpen(false);
+      }
+      if (onChangeModal) {
+        onChangeModal(null);
+      }
+    }
+  }, [initialModal, onChangeModal]);
+
   // Form states for Pet Registration
   const [petForm, setPetForm] = useState({
     rutDueno: '',
     nombreDueno: '',
+    emailDueno: '',
     nombreMascota: '',
     especie: 'Perro',
     raza: '',
@@ -67,8 +108,8 @@ export default function UserPortal({ tramites, mascotas, onAddPet, onDeletePet }
   // Handle Pet Registration submit
   const handleRegisterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!petForm.rutDueno || !petForm.nombreDueno || !petForm.nombreMascota) {
-      alert("Por favor complete los campos obligatorios (RUT, Nombre Dueño, Nombre Mascota).");
+    if (!petForm.rutDueno || !petForm.nombreDueno || !petForm.nombreMascota || !petForm.emailDueno) {
+      alert("Por favor complete los campos obligatorios (RUT, Nombre Dueño, Correo Electrónico, Nombre Mascota).");
       return;
     }
 
@@ -77,6 +118,7 @@ export default function UserPortal({ tramites, mascotas, onAddPet, onDeletePet }
       id: newPetId,
       rutDueno: petForm.rutDueno,
       nombreDueno: petForm.nombreDueno,
+      emailDueno: petForm.emailDueno,
       nombreMascota: petForm.nombreMascota,
       especie: petForm.especie,
       raza: petForm.raza || "No especificada",
@@ -95,6 +137,7 @@ export default function UserPortal({ tramites, mascotas, onAddPet, onDeletePet }
     setPetForm({
       rutDueno: '',
       nombreDueno: '',
+      emailDueno: '',
       nombreMascota: '',
       especie: 'Perro',
       raza: '',
@@ -105,10 +148,10 @@ export default function UserPortal({ tramites, mascotas, onAddPet, onDeletePet }
     });
 
     setNotification({
-      message: `¡Registro exitoso! Guarde su ID de registro: ${newPetId} para consultas futuras.`,
+      message: `¡Registro exitoso! Se ha enviado la información del trámite y el ID [${newPetId}] al correo electrónico: ${newPet.emailDueno}. Guarde este ID para consultas sanitarias en frontera.`,
       type: 'success'
     });
-    setTimeout(() => setNotification(null), 8000);
+    setTimeout(() => setNotification(null), 10000);
   };
 
   // Handle Pet Query
@@ -590,6 +633,20 @@ export default function UserPortal({ tramites, mascotas, onAddPet, onDeletePet }
                     id="input-pet-tutor-nombre"
                   />
                 </div>
+              </div>
+
+              {/* Email Tutor */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase">Correo Electrónico *</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="usuario@ejemplo.com"
+                  value={petForm.emailDueno}
+                  onChange={(e) => setPetForm({ ...petForm, emailDueno: e.target.value })}
+                  className="mt-1 w-full border border-slate-200 rounded-lg p-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#002f6c]"
+                  id="input-pet-email"
+                />
               </div>
 
               {/* Pet Info */}

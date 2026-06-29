@@ -5,6 +5,7 @@ import UserPortal from './components/UserPortal';
 import PDIPortal from './components/PDIPortal';
 import AduanaPortal from './components/AduanaPortal';
 import SAGPortal from './components/SAGPortal';
+import SeleccionPerfil from './components/SeleccionPerfil';
 import { Mascota, CasoPDI, PasajeroAduana, EquipajeSAG, ArticuloEquipaje } from './types';
 import { 
   TRÁMITES_INICIALES, 
@@ -13,11 +14,26 @@ import {
   PASAJEROS_ADUANA_INICIALES, 
   EQUIPAJES_SAG_INICIALES 
 } from './data/mockData';
-import { Landmark, ShieldCheck, ArrowRight, HeartHandshake, BookOpen, RefreshCw } from 'lucide-react';
+import { Landmark, ShieldCheck, ArrowRight, HeartHandshake, BookOpen, RefreshCw, Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
 
 export default function App() {
   // Current Perspective (now defaults to 'home')
-  const [currentRole, setCurrentRole] = useState<'home' | 'usuario' | 'pdi' | 'aduana' | 'sag'>('home');
+  const [currentRole, setCurrentRole] = useState<'home' | 'usuario' | 'pdi' | 'aduana' | 'sag' | 'seleccion-perfil'>('home');
+
+  // Navigation helpers for direct links
+  const [userActiveTab, setUserActiveTab] = useState<'tramites' | 'mascotas'>('tramites');
+  const [userActiveModal, setUserActiveModal] = useState<'register' | 'query' | 'delete' | null>(null);
+
+  const handleStartSimulation = (
+    role: 'home' | 'usuario' | 'pdi' | 'aduana' | 'sag' | 'seleccion-perfil',
+    extra?: { tab?: 'tramites' | 'mascotas'; modal?: 'register' | 'query' | 'delete' | null }
+  ) => {
+    if (extra) {
+      if (extra.tab) setUserActiveTab(extra.tab);
+      if (extra.modal !== undefined) setUserActiveModal(extra.modal);
+    }
+    setCurrentRole(role);
+  };
 
   // Shared application states (persisted via LocalStorage for high-fidelity evaluation)
   const [mascotas, setMascotas] = useState<Mascota[]>([]);
@@ -125,6 +141,22 @@ export default function App() {
     return true;
   };
 
+  const handleUpdateCasoPDI = (casoId: string, resolucion: 'Aceptado' | 'Denegado' | 'Pendiente', motivo: string) => {
+    const updated = casosPDI.map(c => {
+      if (c.id === casoId) {
+        return {
+          ...c,
+          resolucionPDI: resolucion,
+          motivoResolucion: motivo,
+          estado: resolucion === 'Aceptado' ? 'Despejado' as const : resolucion === 'Denegado' ? 'Alerta Activa' as const : c.estado
+        };
+      }
+      return c;
+    });
+    setCasosPDI(updated);
+    localStorage.setItem('sgu_casos', JSON.stringify(updated));
+  };
+
   const handleAduanaDecision = (pasajeroId: string, decision: 'Acceso Permitido' | 'Acceso Denegado', motivo?: string) => {
     const updated = pasajerosAduana.map(p => {
       if (p.id === pasajeroId) {
@@ -212,7 +244,16 @@ export default function App() {
       <main className="flex-1 w-full pb-12">
         {currentRole === 'home' && (
           <HomePortal
-            onStartSimulation={setCurrentRole}
+            onStartSimulation={handleStartSimulation}
+            petCount={mascotas.length}
+            pendingAduanaCount={pasajerosAduana.filter(p => p.estadoPaso === 'Pendiente').length}
+            pendingSagCount={equipajesSAG.filter(e => e.cumpleSAG === 'Pendiente').length}
+          />
+        )}
+
+        {currentRole === 'seleccion-perfil' && (
+          <SeleccionPerfil
+            onSelectRole={setCurrentRole}
             petCount={mascotas.length}
             pendingAduanaCount={pasajerosAduana.filter(p => p.estadoPaso === 'Pendiente').length}
             pendingSagCount={equipajesSAG.filter(e => e.cumpleSAG === 'Pendiente').length}
@@ -225,12 +266,17 @@ export default function App() {
             mascotas={mascotas}
             onAddPet={handleAddPet}
             onDeletePet={handleDeletePet}
+            initialTab={userActiveTab}
+            onChangeTab={setUserActiveTab}
+            initialModal={userActiveModal}
+            onChangeModal={setUserActiveModal}
           />
         )}
 
         {currentRole === 'pdi' && (
           <PDIPortal 
             casos={casosPDI}
+            onUpdateCaso={handleUpdateCasoPDI}
           />
         )}
 
@@ -246,6 +292,7 @@ export default function App() {
         {currentRole === 'sag' && (
           <SAGPortal 
             equipajes={equipajesSAG}
+            mascotas={mascotas}
             onUpdateEquipaje={handleUpdateEquipaje}
           />
         )}
@@ -291,27 +338,46 @@ export default function App() {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-4 text-left">
-            <div className="bg-white p-1 rounded">
-              <Landmark className="h-8 w-8 text-blue-950" />
+            <div className="bg-white p-1.5 rounded-lg shadow-sm">
+              <Landmark className="h-8 w-8 text-[#00152f]" />
             </div>
             <div>
               <p className="font-bold text-white text-sm">Servicio Nacional de Aduanas • Gobierno de Chile</p>
-              <p className="text-[10px] text-slate-500 mt-0.5">Ministerio de Hacienda, República de Chile. Prototipo SGUH para control de frontera.</p>
+              <p className="text-[10px] text-slate-400 mt-0.5">Ministerio de Hacienda, República de Chile. Prototipo oficial simplificado para la integración fronteriza.</p>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-4 items-center justify-center md:justify-end">
-            <button
-              onClick={handleResetSimulation}
-              className="px-3.5 py-1.5 bg-red-950/40 hover:bg-red-900 text-red-400 hover:text-red-300 rounded-lg text-xs font-semibold border border-red-900/50 transition-colors cursor-pointer flex items-center gap-1.5"
-              id="btn-reiniciar-simulador"
-            >
-              <RefreshCw className="h-3 w-3 animate-reverse" />
-              Reiniciar Prototipo
-            </button>
-            <span className="text-[10px] bg-[#002f6c] text-[#f2a900] font-mono px-3 py-1 rounded border border-blue-900">
-              Versión 1.4.0 (Vite + React)
-            </span>
+          <div className="flex flex-col items-center md:items-end gap-3">
+            {/* Redes Sociales Oficiales */}
+            <div className="flex items-center gap-4" id="social-links-footer">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider hidden sm:inline">SÍGUENOS:</span>
+              <a href="https://www.facebook.com/aduana.chile" target="_blank" rel="noopener noreferrer" className="p-1.5 bg-slate-900/40 hover:bg-[#1877f2]/20 hover:text-[#1877f2] rounded-full text-slate-400 transition-all border border-slate-800" title="Facebook">
+                <Facebook className="h-4.5 w-4.5" />
+              </a>
+              <a href="https://twitter.com/AduanasDeChile" target="_blank" rel="noopener noreferrer" className="p-1.5 bg-slate-900/40 hover:bg-[#1da1f2]/20 hover:text-[#1da1f2] rounded-full text-slate-400 transition-all border border-slate-800" title="Twitter / X">
+                <Twitter className="h-4.5 w-4.5" />
+              </a>
+              <a href="https://www.instagram.com/aduanasdechile" target="_blank" rel="noopener noreferrer" className="p-1.5 bg-slate-900/40 hover:bg-[#e1306c]/20 hover:text-[#e1306c] rounded-full text-slate-400 transition-all border border-slate-800" title="Instagram">
+                <Instagram className="h-4.5 w-4.5" />
+              </a>
+              <a href="https://www.youtube.com/user/AduanasdeChile" target="_blank" rel="noopener noreferrer" className="p-1.5 bg-slate-900/40 hover:bg-[#ff0000]/20 hover:text-[#ff0000] rounded-full text-slate-400 transition-all border border-slate-800" title="YouTube">
+                <Youtube className="h-4.5 w-4.5" />
+              </a>
+            </div>
+
+            <div className="flex flex-wrap gap-3 items-center mt-1">
+              <button
+                onClick={handleResetSimulation}
+                className="px-3.5 py-1.5 bg-red-950/40 hover:bg-red-900 text-red-400 hover:text-red-300 rounded-lg text-xs font-semibold border border-red-900/50 transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm"
+                id="btn-reiniciar-simulador"
+              >
+                <RefreshCw className="h-3 w-3 animate-reverse" />
+                Reiniciar Prototipo
+              </button>
+              <span className="text-[10px] bg-[#002f6c] text-[#f2a900] font-mono px-3 py-1.5 rounded-lg border border-blue-900">
+                Versión 1.4.0 (Vite + React)
+              </span>
+            </div>
           </div>
         </div>
 

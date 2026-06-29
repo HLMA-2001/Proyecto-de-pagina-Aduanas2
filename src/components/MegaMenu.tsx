@@ -6,8 +6,8 @@ import {
 } from 'lucide-react';
 
 interface MegaMenuProps {
-  currentRole: 'home' | 'usuario' | 'pdi' | 'aduana' | 'sag';
-  onChangeRole: (role: 'home' | 'usuario' | 'pdi' | 'aduana' | 'sag') => void;
+  currentRole: 'home' | 'usuario' | 'pdi' | 'aduana' | 'sag' | 'seleccion-perfil';
+  onChangeRole: (role: 'home' | 'usuario' | 'pdi' | 'aduana' | 'sag' | 'seleccion-perfil') => void;
   petCount: number;
   pendingAduanaCount: number;
   pendingSagCount: number;
@@ -59,11 +59,11 @@ export default function MegaMenu({
                   Aduana de Chile
                 </span>
                 <span className="text-[10px] bg-[#f2a900] text-blue-950 font-bold px-1.5 py-0.5 rounded tracking-wide uppercase flex items-center gap-1">
-                  <Radio className="h-2.5 w-2.5 animate-pulse text-blue-950" /> SGUH
+                  <Radio className="h-2.5 w-2.5 animate-pulse text-blue-950" /> ADUANAS DE CHILE
                 </span>
               </div>
               <h1 className="text-lg font-bold tracking-tight text-white flex items-center gap-1">
-                SGUH <span className="text-xs font-normal text-slate-300 hidden md:inline">| Sistema de Gestión Unificado</span>
+                ADUANAS DE CHILE <span className="text-xs font-normal text-slate-300 hidden md:inline">| Sistema de Gestión Unificado</span>
               </h1>
             </div>
           </div>
@@ -252,53 +252,24 @@ export default function MegaMenu({
               </AnimatePresence>
             </div>
 
-            {/* Quick Access Buttons for Control Roles */}
+            {/* Unified Portal Access Button */}
             <div className="h-6 w-[1px] bg-white/10 mx-2"></div>
 
             <button
-              onClick={() => { onChangeRole('aduana'); setIsOpen(false); }}
-              className={`px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-1 transition-all duration-200 cursor-pointer ${
-                currentRole === 'aduana'
-                  ? 'bg-[#f2a900] text-blue-950 shadow-sm'
-                  : 'text-slate-200 hover:text-white hover:bg-white/5'
+              onClick={() => { onChangeRole('seleccion-perfil'); setIsOpen(false); }}
+              className={`px-3.5 py-2 rounded-lg text-sm font-bold flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
+                currentRole === 'seleccion-perfil'
+                  ? 'bg-[#f2a900] text-blue-950 shadow-sm font-extrabold'
+                  : 'bg-white/10 text-white hover:bg-[#f2a900]/20 hover:text-white border border-white/10 hover:border-[#f2a900]/40'
               }`}
             >
-              <FileText className="h-4 w-4" />
-              <span>Aduanas</span>
-              {pendingAduanaCount > 0 && (
-                <span className="bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">
-                  {pendingAduanaCount}
+              <User className="h-4 w-4" />
+              <span>Ingresar a Portales</span>
+              {(pendingAduanaCount + pendingSagCount) > 0 && (
+                <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">
+                  {pendingAduanaCount + pendingSagCount}
                 </span>
               )}
-            </button>
-
-            <button
-              onClick={() => { onChangeRole('sag'); setIsOpen(false); }}
-              className={`px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-1 transition-all duration-200 cursor-pointer ${
-                currentRole === 'sag'
-                  ? 'bg-[#f2a900] text-blue-950 shadow-sm'
-                  : 'text-slate-200 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Leaf className="h-4 w-4" />
-              <span>SAG</span>
-              {pendingSagCount > 0 && (
-                <span className="bg-emerald-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                  {pendingSagCount}
-                </span>
-              )}
-            </button>
-
-            <button
-              onClick={() => { onChangeRole('pdi'); setIsOpen(false); }}
-              className={`px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-1 transition-all duration-200 cursor-pointer ${
-                currentRole === 'pdi'
-                  ? 'bg-[#f2a900] text-blue-950 shadow-sm'
-                  : 'text-slate-200 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <ShieldAlert className="h-4 w-4" />
-              <span>PDI</span>
             </button>
           </nav>
 
@@ -371,38 +342,17 @@ export default function MegaMenu({
                 </h4>
                 <div className="space-y-1">
                   <button
-                    onClick={() => { onChangeRole('aduana'); setMobileMenuOpen(false); }}
-                    className={`w-full text-left px-6 py-2.5 rounded-lg text-xs font-semibold flex items-center justify-between ${
-                      currentRole === 'aduana' ? 'bg-white/10 text-white' : 'text-slate-300 hover:bg-white/5'
+                    onClick={() => { onChangeRole('seleccion-perfil'); setMobileMenuOpen(false); }}
+                    className={`w-full text-left px-6 py-2.5 rounded-lg text-xs font-bold flex items-center justify-between ${
+                      currentRole === 'seleccion-perfil' ? 'bg-[#f2a900] text-blue-950 font-extrabold' : 'text-slate-300 hover:bg-white/5'
                     }`}
                   >
-                    <span>Oficial Aduana</span>
-                    {pendingAduanaCount > 0 && (
+                    <span>Ingresar a Portales</span>
+                    {(pendingAduanaCount + pendingSagCount) > 0 && (
                       <span className="bg-red-500 text-white font-bold px-1.5 py-0.5 rounded-full text-[10px]">
-                        {pendingAduanaCount}
+                        {pendingAduanaCount + pendingSagCount}
                       </span>
                     )}
-                  </button>
-                  <button
-                    onClick={() => { onChangeRole('sag'); setMobileMenuOpen(false); }}
-                    className={`w-full text-left px-6 py-2.5 rounded-lg text-xs font-semibold flex items-center justify-between ${
-                      currentRole === 'sag' ? 'bg-white/10 text-white' : 'text-slate-300 hover:bg-white/5'
-                    }`}
-                  >
-                    <span>Inspector SAG</span>
-                    {pendingSagCount > 0 && (
-                      <span className="bg-emerald-600 text-white font-bold px-1.5 py-0.5 rounded-full text-[10px]">
-                        {pendingSagCount}
-                      </span>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => { onChangeRole('pdi'); setMobileMenuOpen(false); }}
-                    className={`w-full text-left px-6 py-2.5 rounded-lg text-xs font-semibold ${
-                      currentRole === 'pdi' ? 'bg-white/10 text-white' : 'text-slate-300 hover:bg-white/5'
-                    }`}
-                  >
-                    Policía PDI
                   </button>
                 </div>
               </div>

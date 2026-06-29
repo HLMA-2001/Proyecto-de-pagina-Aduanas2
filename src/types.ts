@@ -2,6 +2,7 @@ export interface Mascota {
   id: string;
   rutDueno: string;
   nombreDueno: string;
+  emailDueno?: string; // Correo electrónico para notificaciones
   nombreMascota: string;
   especie: string;
   raza: string;
@@ -34,6 +35,8 @@ export interface CasoPDI {
   descripcionDetallada: string;
   origen: string;
   destino: string;
+  resolucionPDI?: 'Aceptado' | 'Denegado' | 'Pendiente';
+  motivoResolucion?: string;
 }
 
 export interface Viaje {
