@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Sistema de Gestión de Aduana Fronterizo",
+  "description": "Prototipo interactivo del Sistema de Gestión de Aduana Fronterizo (Chile) para viajeros (trámites y mascotas), PDI, Aduanas y SAG.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
